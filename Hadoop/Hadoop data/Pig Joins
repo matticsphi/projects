@@ -1,0 +1,61 @@
+dept_lookup = load '/user/training/Join_Input/Dep_lookup/Department_lookup' USING PigStorage(',') as (dep_code:chararray,dept_name:chararray);
+
+emp_department = load '/user/training/Join_Input/Emp_dep/Emp_Department' USING PigStorage(',') as (emp_name:chararray,dept_code:chararray);
+
+emp_details = load '/user/training/Join_Input/Emp_details/Employee_Details' USING PigStorage(',') as (emp_id:int,emp_name:chararray);
+
+-------------------------------------------------------------------------------------------------------------------
+-- Join command format
+INNER JOIN : <relation_name> = JOIN <relation1> BY <column name> , <relation2> BY <Column Name>
+Left OUTER: <relation_name> = JOIN <relation1> BY <column name> LEFT  , <relation2> BY <Column Name>
+Right OUTER: <relation_name> = JOIN <relation1> BY <column name> RIGHT , <relation2> BY <Column Name>
+FULL OUTER: <relation_name> = JOIN <relation1> BY <column name> FULL  , <relation2> BY <Column Name>
+--------------------------------------------------------------------------------------------------------------------
+
+empname_dept_code = JOIN emp_details BY emp_name, emp_department BY emp_name;
+
+empname_dept_code_gen = FOREACH empname_dept_code GENERATE emp_details::emp_name, emp_department::dept_code;
+
+empname_deptname = JOIN  dept_lookup BY dep_code,empname_dept_code_gen BY emp_department::dept_code;
+
+project_from_join = FOREACH empname_deptname GENERATE empname_dept_code_gen::emp_details::emp_name as emp_name,dept_lookup::dept_name as dept_name;
+
+dump project_from_join;
+
+grouped_records = GROUP project_from_join BY dept_name;
+
+count_by_dept = FOREACH grouped_records GENERATE group as dept_name  , COUNT(project_from_join.emp_name);
+
+DUMP count_by_dept;
+
+
+
+-- Co-Group is like group  + Union
+
+cogroup_records = COGROUP count_by_dept by dept_name, dept_lookup by dept_name;
+
+DUMP cogroup_records;
+
+
+----------------------------------------------------------
+
+Macros: Resuable components wrapped in a generic logic
+
+Define filter_by_not_null(X,column) returns filteredrec{
+$filteredrec = FILTER $X BY $column is not null;
+}
+
+----------------------------------------------------------
+
+filtered_macro_example = filter_by_not_null(emp_department,dept_code);
+
+ 
+------------------------------------------------------
+STORE : Store results into a file
+-------------------------------------------------------
+
+STORE cogroup_records INTO '/user/training/co_group_output'
+
+
+
+

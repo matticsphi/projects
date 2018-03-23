@@ -1,0 +1,8 @@
+
+oozie job --oozie http://127.0.0.1:11000/oozie --config /home/cloudera/training/Oozie/workflow1/job.properties -D oozie.wf.application.path=hdfs://quickstart.cloudera/user/training/Oozie/workflow1/ -run
+
+Note: The property file should be on the edge node (not in HDFS), whereas the workflow and hive scripts will be in HDFS
+
+oozie job -info 0000007-160924121928634-oozie-oozi-W -oozie http://127.0.0.1:11000/oozie/
+
+

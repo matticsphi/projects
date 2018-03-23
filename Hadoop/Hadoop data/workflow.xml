@@ -1,0 +1,56 @@
+<!-- This is a comment -->
+<workflow-app xmlns = "uri:oozie:workflow:0.4" name = "simple-Workflow">
+   <start to = "Create_Emp_Dept_Table" />
+
+   <!-- Step 1 -->
+   
+   <action name = "Create_Emp_Dept_Table">
+      <hive xmlns = "uri:oozie:hive-action:0.4">
+         <job-tracker>localhost:8032</job-tracker>
+         <name-node>hdfs://quickstart.cloudera:8020</name-node>
+	 <job-xml>/user/training/Oozie/workflow1/hive-site.xml</job-xml>
+         <script>/user/training/Oozie/workflow1/emp_dept.hive</script>
+	 <param>database_name=practice</param>
+      </hive>
+		
+      <ok to = "Create_Dept_lookup_Table" />
+      <error to = "kill_job" />
+   </action>
+
+   <!-- Step 2 -->
+   
+   <action name = "Create_Dept_lookup_Table">
+      <hive xmlns = "uri:oozie:hive-action:0.4">
+         <job-tracker>localhost:8032</job-tracker>
+         <name-node>hdfs://quickstart.cloudera:8020</name-node>
+	 <job-xml>/user/training/Oozie/workflow1/hive-site.xml</job-xml>
+         <script>/user/training/Oozie/workflow1/dept_lookup.hive</script>
+	 <param>database_name=practice</param>
+      </hive>
+		
+      <ok to = "Join_Tables" />
+      <error to = "kill_job" />
+   </action>
+
+   <!-- Step 3 -->
+      
+   <action name = "Join_Tables">
+      <hive xmlns = "uri:oozie:hive-action:0.4">
+         <job-tracker>localhost:8032</job-tracker>
+         <name-node>hdfs://quickstart.cloudera:8020</name-node>
+	 <job-xml>/user/training/Oozie/workflow1/hive-site.xml</job-xml>
+         <script>/user/training/Oozie/workflow1/join.hive</script>
+         <param>database_name=practice</param>
+      </hive>
+		
+      <ok to = "end" />
+      <error to = "kill_job" />
+   </action>
+   
+   <kill name = "kill_job">
+      <message>Job failed</message>
+   </kill>
+	
+   <end name = "end" />
+
+</workflow-app>

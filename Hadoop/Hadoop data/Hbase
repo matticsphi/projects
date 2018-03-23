@@ -1,0 +1,83 @@
+Hive Table on hbase
+----------------------------------
+
+Hbase Storage Handler:
+
+CREATE EXTERNAL TABLE IF NOT EXISTS MembershipIndexTable(
+key string, 
+CustomerID bigint
+)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES (
+"hbase.key.type" = "string",
+"hbase.columns.mapping" = "Info:CustomerID",
+"hbase.table.name" = "${hiveconf:TLA}:membershipindextable"
+);
+
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS test_hbase (
+key string,
+firstname string,
+lastname string,
+name string) 
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' 
+WITH SERDEPROPERTIES (
+"hbase.key.type" = "string",
+"hbase.columns.mapping" = "cf1:firstname,cf1:lastname,cf1:name",
+"hbase.table.name" = "test"
+);
+
+
+
+sudo service hbase-thrift restart
+sudo service hadoop-hbase-regionserver restart
+sudo service hbase-master restart
+
+
+create 'test1','tables'
+
+
+hbase(main):027:0> scan 'test'
+ROW                             COLUMN+CELL                                                                                
+ row1                           column=cf1:firstname, timestamp=1484637599809, value=yogesh                                
+ row1                           column=cf1:lastname, timestamp=1484637069072, value=keshetty                               
+ row2                           column=cf1:firstname, timestamp=1484637670932, value=venkata                               
+ row2                           column=cf1:lastname, timestamp=1484637751181, value=suram                                  
+2 row(s) in 0.1010 seconds
+
+hbase(main):028:0> scan 'test'
+ROW                             COLUMN+CELL                                                                                
+ row1                           column=cf1:firstname, timestamp=1484637599809, value=yogesh                                
+ row1                           column=cf1:lastname, timestamp=1484637069072, value=keshetty                               
+ row2                           column=cf1:firstname, timestamp=1484637670932, value=venkata                               
+ row2                           column=cf1:lastname, timestamp=1484638443802, value=sur                                    
+2 row(s) in 0.1110 seconds
+
+
+
+hbase(main):029:0> get 'test','row2',{COLUMN =>'cf1:lastname',VERSIONS =>2}
+COLUMN                          CELL                                                                                       
+ cf1:lastname                   timestamp=1484638443802, value=sur                                                         
+ cf1:lastname                   timestamp=1484637751181, value=suram                                                       
+2 row(s) in 0.2380 seconds
+// by default it displays the latest record If the version is 2 it 
+   displays the most recent records
+hbase(main):001:0> get 'test','row2',{COLUMN =>'cf1:lastname',VERSIONS =>3}
+COLUMN                          CELL                                                                                       
+ cf1:lastname                   timestamp=1484639156599, value=s                                                           
+ cf1:lastname                   timestamp=1484638443802, value=sur                                                         
+ cf1:lastname                   timestamp=1484637751181, value=suram                                                       
+3 row(s) in 1.7530 seconds
+
+Jawaharlal Nehru Technological University Hyderabad
+
+Name : Donthula Rakesh
+rakesh.donthula@fedex.com
+its for fedex
+2.Name: Dinesh
+Client: Becton Dickinson
+Role: Team Lead
+Email: Dinesh.reddy@bd.com
+Phone: Provided later
+

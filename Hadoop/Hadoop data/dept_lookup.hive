@@ -1,0 +1,11 @@
+
+use ${database_name};
+
+CREATE EXTERNAL TABLE dept_lookup (
+DEP_CODE string COMMENT 'this column represents Department Code',
+DEP_NAME string COMMENT 'This is the Name of Department'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/Join_Input/Dep_lookup';

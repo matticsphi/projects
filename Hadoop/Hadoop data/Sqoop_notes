@@ -1,0 +1,160 @@
+
+Apache Sqoop is a tool designed for efficiently transferring bulk data between Apache Hadoop and structured datastores such as relational databases.
+
+
+$ mysql -u root -p -hlocalhost
+Enter password: 
+
+mysql> GRANT ALL PRIVILEGES ON *.* TO  'hive'@'%' IDENTIFIED BY 'cloudera';
+mysql> FLUSH PRIVILEGES;
+
+create database training;
+
+use training;
+
+create table sales_table (
+business_date date,
+sales float,
+trx_no int,
+last_updated timestamp
+);
+
+
+LOAD DATA LOCAL INFILE '/home/cloudera/Desktop/sales_table' 
+INTO TABLE sales_table 
+FIELDS TERMINATED BY '|' 
+LINES TERMINATED BY '\n' ;
+
+CREATE TABLE IF NOT EXISTS customers (
+ID int AUTO_INCREMENT,
+firstname string,
+lastname  string,
+address   string,
+country string,
+city string, 
+state string,
+post string,
+phone1 string,
+phone2 string,
+email string,
+web string,
+PRIMARY KEY (ID));
+
+CREATE TABLE IF NOT EXISTS customers (
+ID int AUTO_INCREMENT,
+firstname varchar(100),
+lastname  varchar(100),
+address   varchar(100),
+country varchar(100),
+city varchar(100), 
+state varchar(100),
+post varchar(100),
+phone1 varchar(100),
+phone2 varchar(100),
+email varchar(100),
+web varchar(100),
+PRIMARY KEY (ID));
+
+LOAD DATA INFILE '/home/cloudera/training/mysql_input_customer' 
+INTO TABLE customers 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+IGNORE 1 LINES
+ 
+
+
+sqoop import -D mapreduce.job.name='sqoop-training-sales_table' --connect 'jdbc:mysql://127.0.0.1:3306/training --username=hive --password=cloudera --query "SELECT * FROM training.sales_table c WHERE  \$CONDITIONS" --delete-target-dir --target-dir /sqoop/sales_table/temp --hive-import --hive-overwrite --hive-table training.sales_table_sqoop --split-by trx_no --hive-delims-replacement '|' -m 1
+
+
+sqoop import -D mapreduce.job.name='sqoop-training2-customers_table' --connect 'jdbc:mysql://127.0.0.1:3306/training2' --username=hive --password=cloudera --query "SELECT * FROM training2.customers c WHERE  \$CONDITIONS" --delete-target-dir --target-dir /sqoop/customer_table/temp --split-by id -m 5
+
+sqoop import -D mapreduce.job.name='sqoop-training2-customers_table' --connect 'jdbc:mysql://127.0.0.1:3306/training2' --username=hive --password=cloudera --table customers  --delete-target-dir --target-dir /sqoop/customer_table/temp  -m 5
+
+
+
+
+select min(id),max(id) from customers;
+
+1 and 2000
+
+select * from customers where id>=1 and id<=501
+select * from customers where id>501 and id<=1001
+select * from customers where id>1000 and id<=1501
+select * from customers where id>1501 and id<=2000
+
+
+name
+
+min(name), max(name)
+
+a, z
+
+select * from custoemrs where name like 'a%' or 'b';
+
+sqoop import -D mapreduce.job.name='sqoop-training2-customers_table' --connect 'jdbc:mysql://127.0.0.1:3306/training2' --username=hive --password=cloudera --query "SELECT * FROM training2.customers c WHERE  \$CONDITIONS" --delete-target-dir --target-dir /sqoop/customer_table/temp2 --hive-import --hive-overwrite --hive-table training2.customer_table_sqoop --split-by id -m 5
+
+
+sqoop import -D mapreduce.job.name='sqoop-training-sales_table' --connect 'jdbc:mysql://127.0.0.1:3306/training2' --username=hive --password=cloudera --query "SELECT * FROM training2.customers c WHERE  \$CONDITIONS" --delete-target-dir --target-dir /sqoop/sales_table/temp --hive-import --hive-overwrite --hive-table training.sales_table_sqoop --split-by trx_no --hive-delims-replacement '|' -m 1
+
+
+customers table | 08-31
+
+
+By default sqoop launches 4 Mappers
+
+select min(primary_key),max(primary_key) from <tablename> 
+
+select min(id),max(id) from <tablename> 
+
+min -1 
+max - 100
+
+select * from sales_table where id>=1 and id<=50;
+select * from sales_table where id>=51 and id<=100;
+
+
+country -- US
+
+select min(county),max(country) from table 
+
+select * from table where country='US'
+
+1001 , 1003
+(1001+1003)/2 = 1002
+trx_no>=1001 and trx_no<1002
+trx_no<=1002 and trx_no<1003
+
+10 records
+5 more new records/updated records (3 new records/ 2 are updated )
+
+8 records
+5 records from today
+
+
+
+Two modes for incremental:
+
+1) Incremental append
+2) last modified
+
+
+
+sqoop import -D mapreduce.job.name='sqoop-training-sales_table' --connect 'jdbc:mysql://127.0.0.1:3306/training' --username=hive --password=cloudera --query "SELECT * FROM training.customers c WHERE c.ID<=1000 AND \$CONDITIONS"  --target-dir /sqoop/customers/temp  --split-by ID -m 1
+
+
+
+sqoop import -D mapreduce.job.name='sqoop-training-sales_table' --connect 'jdbc:mysql://127.0.0.1:3306/training' --username=hive --password=cloudera --table customers  --target-dir /sqoop/customers/temp  --split-by ID -m 1 --incremental append --check-column ID --last-value 1000
+
+sqoop export -D mapreduce.job.name='sqoop-training-sales_table' --connect 'jdbc:mysql://127.0.0.1:3306/training' --username=hive --password=cloudera --table customers --export-dir /sqoop/customers/temp 
+
+sqoop export -D mapreduce.job.name='sqoop-training-sales_table' --connect 'jdbc:mysql://127.0.0.1:3306/training' --username=hive --password=cloudera --table customers --export-dir /sqoop/customers/temp --update-key ID
+
+-- Creating a Sqoop Job (Space before export is required)
+sqoop job --create exportjob_test -- export --connect 'jdbc:mysql://127.0.0.1:3306/training' --username=hive --password=cloudera --table customers --export-dir /sqoop/customers/temp --update-key ID
+
+
+-- List Jobs
+sqoop job --list
+
+-- Execute a job
+sqoop job --exec exportjob

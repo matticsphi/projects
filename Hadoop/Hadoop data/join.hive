@@ -1,0 +1,3 @@
+
+use ${database_name};
+create table emp_join as select emp_dept.*,dept_lookup.dep_name from emp_dept inner join dep_lookup on emp_dept.dep_code= dep_lookup.dep_code;

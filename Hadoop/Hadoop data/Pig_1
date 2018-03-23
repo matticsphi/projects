@@ -1,0 +1,46 @@
+
+records = load '/user/training/Pig_test' using PigStorage(',') as (sno:int, country:chararray, year:int);
+
+DUMP records;
+
+
+Filter: 
+
+-- For the above records… now find the records that does not have nulls in year
+
+Filtered_records = FILTER records BY year is not null;
+
+Dump Filtered_records;
+
+
+Split
+
+SPLIT records INTO good_records if year is not null, bad_records if year is null;
+
+
+dump good_records;
+dump bad_records;
+
+Group
+
+groupedrecords = group good_records by year;
+
+LIMIT :
+
+limitrecords = limit groupedrecords 1;
+
+dump limitrecords;
+
+Union:
+
+ensure that the tuples in the input relations have the same schema
+
+unionrecords = union records,records1;
+
+
+
+Join: 
+C = Join A by $0, B by f1; 
+C = Join A by $0, B by f1 using replicated; -- This is used when data in B is small enough to fit in memory and passes this data to all mappers. 
+C = Join A by $0 LEFT OUTER, B by f1;
+

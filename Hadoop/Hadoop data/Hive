@@ -1,0 +1,369 @@
+
+
+setting variable in hive
+set sysdate='2016-09-09';
+set sysdate
+
+
+Script in hql file
+set Database='practice';
+set table_name='fruits';
+
+
+use ${hiveconfig:Database};
+Select count(*) from ${hiveconfig:table_name};
+save file as hive1.hql
+Execute 
+hive -f hive1.hql;
+/////////////////
+Passing parameters in the command mode
+how to run in local system
+ 
+hive  -hiveconf DataBase='practice' -hiveconf table_name='fruits' -f test.hql 
+
+////////////////
+Outside the hive terminal
+
+ hive -e 'use training;select count(*) from fruits_colours_array';
+//////////////
+
+-- creating a DataBase
+create database training location '<HDFS PATH>';
+
+
+Example: create database training location '/user/training/db';
+
+
+
+CREATE TABLE emp_department1 (
+EMPID int COMMENT 'this column represents EMPLOYEE ID',
+DEP_CODE string COMMENT 'this column represents Department Code'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n';
+
+
+load data inpath '/user/cloudera/Emp_Department' into table emp_department;
+
+
+
+CREATE EXTERNAL TABLE dept_lookup (
+DEP_CODE string COMMENT 'this column represents Department Code',
+DEP_NAME string COMMENT 'This is the Name of Department'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/cloudera/Dep_lookup';
+
+
+
+CREATE EXTERNAL TABLE emp_dept (
+EMP_NAME string COMMENT 'This is the Name of Employee',
+DEP_CODE string COMMENT 'this column represents Department Code'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/Join_Input/Emp_dep';
+
+
+
+CREATE EXTERNAL TABLE emp_dept (
+EMP_ID int COMMENT 'this column represents Employee ID',
+EMP_NAME string COMMENT 'This is the Name of Employee'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/Join_Input/Emp_details';
+
+
+
+CREATE EXTERNAL TABLE fruits_colours (
+fruits array<string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '|' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS fruits_colours_array (
+fruits array<string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+COLLECTION ITEMS TERMINATED BY '|' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours_array';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS fruits_colours_Map (
+fruits map<string,string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+MAP KEYS TERMINATED BY '|' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours_array';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS fruits_colours_struct (
+fruits struct<name:string,value:string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+COLLECTION ITEMS TERMINATED BY '|' 
+MAP KEYS TERMINATED BY '#' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours_array';
+
+
+---------------------------------------------------------------------------------------------------------
+
+CREATE EXTERNAL TABLE fruits_colours_struct (
+fruits struct<name:string,value:string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+COLLECTION ITEMS TERMINATED BY '|' 
+MAP KEYS TERMINATED BY '#' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/struct_example';
+
+CREATE EXTERNAL TABLE fruits_colours_struct_map (
+fruits struct<name:map<string,string>,value:map<string,string>>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+COLLECTION ITEMS TERMINATED BY '|' 
+MAP KEYS TERMINATED BY '#' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/struct_example';
+
+
+
+
+Inner join: only matching columns on both the tables are return as output
+Left outer join: All left table rows are populated and matching columns of right table are populated 
+right outer join: all right table rows are populated and mathing columns of left table are populated 
+
+--------------------------------------------------------------------------------------------------
+
+
+1) Partitons 
+2) Bucketing
+
+Us data for all states 
+
+
+100 million records
+
+where state=CA
+
+
+user/training/db/Weather/File1
+user/training/db/Weather/File2
+..
+
+user/training/db/Weather/state=CA/File1
+user/training/db/Weather/State=NV/file2
+user/training/db/Weather/State=TX/file2
+
+CREATE TABLE sales (business_date string,sales float,txn_no int) 
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '|'
+LINES TERMINATED BY '\n' 
+LOCATION '/user/cloudera/sales_table';
+
+tblproperties ("skip.header.line.count"="1") ;
+
+CREATE TABLE sales_partitioned 
+(
+sales float,
+txn_no int
+) PARTITIONED BY (business_date string) STORED AS TEXTFILE;
+
+-- Static Partitioning
+INSERT INTO TABLE sales_partitioned PARTITION(business_date='20160824') 
+SELECT 
+sales,
+txn_no
+from sales;
+
+
+CREATE EXTERNAL TABLE sales_partitioned_dynamic
+(
+sales float,
+txn_no int
+) PARTITIONED BY (business_date string) STORED AS TEXTFILE;
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+-- dynamic paritioning
+INSERT INTO TABLE sales_partitioned_dynamic PARTITION(business_date) 
+SELECT 
+sales,
+txn_no,
+business_date 
+from sales;
+
+CREATE EXTERNAL TABLE sales_partitioned_dynamic_external 
+(
+sales float,
+txn_no int
+) PARTITIONED BY (business_date string) STORED AS TEXTFILE 
+LOCATION 'hdfs://quickstart.cloudera:8020/user/training/training2.db/sales_partitioned_dynamic';
+
+
+alter table sales_partitioned_dynamic_external add partition (business_date='2016-01-02');
+
+msck repair table sales_partitioned_dynamic_external;
+
+
+show create table <tablename>;
+
+------------------------------------------------------------------
+
+CREATE EXTERNAL TABLE user_test(
+firstname string,
+lastname string
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LOCATION 'hdfs://quickstart.cloudera:8020/user/training/db/user_unbucketed' TBLPROPERTIES('skip.header.line.count'='1');
+
+
+
+CREATE TABLE IF NOT EXISTS user_unbucketed (
+firstname string,
+lastname  string,
+address   string,
+country string,
+city string, 
+state string,
+post string,
+phone1 string,
+phone2 string,
+email string,
+web string) 
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+TBLPROPERTIES('skip.header.line.count'='1');
+
+LOAD DATA LOCAL INPATH '/home/cloudera/training/bucketing_input' INTO TABLE user_unbucketed;
+
+
+CREATE TABLE bucketed_user_1(
+firstname string,
+lastname  string,
+address   string,
+city string, 
+state string,
+post string,
+phone1 string,
+phone2 string,
+email string,
+web string
+)
+COMMENT 'A bucketed sorted user table'
+PARTITIONED BY (country string) 
+CLUSTERED BY (state) SORTED BY (city) INTO 10 BUCKETS;
+
+set hive.enforce.bucketing = true;
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+INSERT OVERWRITE TABLE bucketed_user_1 PARTITION (country)
+SELECT 
+firstname ,
+lastname,
+address ,
+city,
+state ,
+post,
+phone1,
+phone2,
+email ,
+web ,
+country 
+FROM user_unbucketed;
+
+
+SELECT firstname, country, state, city FROM bucketed_user  TABLESAMPLE(BUCKET 32 OUT OF 32 ON state);
+
+
+
+CREATE TABLE bucketed_user_1(
+firstname string,
+lastname  string,
+address   string,
+city string, 
+state string,
+post string,
+phone1 string,
+phone2 string,
+email string,
+web string
+)
+COMMENT 'A bucketed sorted user table'
+PARTITIONED BY (country string) 
+CLUSTERED BY (state) SORTED BY (city) INTO 10 BUCKETS 
+STORED AS PARQUET;
+
+-- Executing set of SQL's in Batch mode
+hive -hiveconf database_name='training' -hiveconf table_name='sales' -f test.sql 
+-- Executing set of SQL's from command line
+hive -e 'show databases;use training2;show tables'
+
+
+-----------------------------------------------------------------------------------------
+UDF - User Defined Functions 
+UDAF - User Defined Aggregate functions
+UDTF - Uder Defined Table functions
+
+-----------------
+Yogesh Keshetty
+
+y keshetty
+
+Yogesh keshetty 
+
+
+create table test(fullname string,memberid int);
+
+Yogesh Keshetty,1234
+y%%%#55443%% keshetty,324234
+y gguu keshetty,534
+keshetty yogi,4543
+keshetty yogesh g,545634
+
+select parser(fullname,'firstname'), parse(fullname,'lastname'), memberid from test;
+
+Yogesh, keshetty, 1234
+
+y, keshetty, 21321
+gguu
+
+
+
+
+add jar /home/cloudera/training/hiveudf.jar;
+
+CREATE TEMPORARY FUNCTION nameparser as 'com.training.hiveUDFS.NameParser';
+
+
+CREATE TABLE names_test (name string);
+
+load data local inpath '/home/cloudera/training/test_names' into table names_test;
+
+
+
+
+
+
+

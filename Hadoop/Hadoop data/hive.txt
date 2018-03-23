@@ -1,0 +1,102 @@
+
+set sysdate='2016-09-09';
+set sysdate
+
+
+Script in hql file
+set Database='practice';
+set table_name='fruits';
+
+
+use ${hiveconfig:Database};
+Select count(*) from ${hiveconfig:table_name};
+save file as hive1.hql
+Execute 
+hive -f hive1.hql;
+/////////////////
+Passing parameters in the command mode
+how to run in local system
+ 
+hive  -hiveconf DataBase='practice' -hiveconf table_name='fruits' -f test.hql 
+
+////////////////
+Outside the hive terminal
+
+ hive -e 'use training;select count(*) from fruits_colours_array';
+ -s -e
+ -v 
+//////////////
+
+cREATE EXTERNAL TABLE dept_lookup (
+DEP_CODE string COMMENT 'this column represents Department Code',
+DEP_NAME string COMMENT 'This is the Name of Department'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' TBLS
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/Join_Input/Dep_lookup';
+
+
+
+CREATE EXTERNAL TABLE emp_dept (
+EMP_NAME string COMMENT 'This is the Name of Employee',
+DEP_CODE string COMMENT 'this column represents Department Code'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/Join_Input/Emp_dep';
+
+
+
+CREATE EXTERNAL TABLE emp_dept (
+EMP_ID int COMMENT 'this column represents Employee ID',
+EMP_NAME string COMMENT 'This is the Name of Employee'
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/Join_Input/Emp_details';
+
+
+//mahesh|32
+
+CREATE EXTERNAL TABLE fruits_colours (
+fruits array<string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '|' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS fruits_colours_array (
+fruits array<string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+COLLECTION ITEMS TERMINATED BY '|' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours_array';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS fruits_colours_Map (
+fruits map<string,string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+MAP KEYS TERMINATED BY '|' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours_array';
+
+CREATE EXTERNAL TABLE IF NOT EXISTS fruits_colours_struct (
+fruits struct<name:string,value:string>,
+comment string 
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+COLLECTION ITEMS TERMINATED BY '|' 
+MAP KEYS TERMINATED BY '#' 
+LINES TERMINATED BY '\n' 
+LOCATION '/user/training/fruits_colours_array';
